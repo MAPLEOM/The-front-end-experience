@@ -1,3 +1,4 @@
 Compressor 图片裁剪压缩等功能
 https://cssanimo.netlify.app/  纯css效果
 jszip 用于前端打包压缩文件夹(图片暂不能压缩)
+vue-meta 管理页面的meta标签 便于微信等分享
