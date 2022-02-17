@@ -45,6 +45,7 @@
 2. 组件实例 property
    data methods props computed inject setup等 => 无论如何定义 都可以在组件的模板中访问;
    Vue还暴露了一些内置 property => $attrs $emit (含有$前缀 避免与用户自定义property冲突);
+   "tips" : $attrs 包含父组件所有未在子组件定义的 props 或 自定义事件的属性 => 可以通过 v-bind="$attrs"传入到内部组件
 3. 声明周期钩子函数
    声明周期钩子给用户在不同阶段添加自己代码的机会!!
    created 钩子可以用来在一个实例创建之后执行代码; mounted updated unmounted;
@@ -62,7 +63,7 @@
 	<span v-html="rawHtml"></span>  => v-html 容易导致XSS攻击 要尽可能只对可信内容使用
 3. attribute
 	可以使用 v-bind 指令绑定属性 如果绑定的值是 !!null!! 或者 undefined => 那么该 attribute 将不会包含在渲染的元素上!!
-    对于 布尔attribute(只要存在就意味着为 true) => 如果v-bind绑定的值为 truthy 或者 空字符串("") 属性则会包含在内,否则不会.
+    对于布尔attribute(只要存在就意味着为 true) => 如果v-bind绑定的值为 truthy 或者 空字符串("") 属性则会包含在内,否则不会.
 4. 使用 js 表达式(只限单个表达式)
 	{{ number + 1 }} {{ ok?'yes':'no' }} 
 	{{ message.split('').reverse().join('') }} <div v-bind:id="'list-' + id"></div>
@@ -113,6 +114,11 @@
     Vue自动为 methods 绑定 this. 在定义methods时候 => 避免使用箭头函数
 3. 防抖和节流
 	Vue没有内置的防抖和节流 可以使用 Lodash等库来实现(_.debounce _.throttle)
+	methods: {
+		msgClick: _.throttle(() => {
+			console.log('节流');
+		}, 1000),
+	},
 ```
 
 ## VII. 计算属性和侦听器
@@ -761,6 +767,7 @@
     	<template v-slot:header>
             <h1>Here might be a page title</h1>
          </template>
+		<slot name="header"></slot>
     注意: v-slot 只能添加在 <template> 上 
 3. 作用域插槽
 	绑定在 <slot> 元素上的 attribute 被称为插槽 prop. 在父级作用域中，我们可以使用带值的 v-slot 来定义我们提供的插槽 prop 的名字
@@ -815,7 +822,7 @@
      </template>
 ```
 
-## VI. Provide / Inject( 可以看成长距离的prop )
+## VI. Provide / Inject( 可以看成 长距离 的prop )
 
 ```javascript
 1. 我们可以使用一对 provide 和 inject。无论组件层次结构有多深，父组件都可以作为其所有子组件的依赖提供者。
@@ -935,4 +942,123 @@ tips: !! provide/inject 绑定并不是响应式的
 2. 低级静态组件与 v-once
 	可以通过向根元素添加 v-once 指令来确保只对其求值一次，然后进行缓存(不要过度使用这种模式)
 ```
+
+# 3. 可复用 & 组合
+
+## I. 组合式API
+
+## II. Mixin
+
+```js
+1. 基础
+	一个 mixin 对象可以包含任意组件选项。当组件使用 mixin 对象时，所有 mixin 对象的选项将被“混合”进入该组件本身的选项。
+	// 定义一个 mixin 对象
+    const myMixin = {
+        created() {
+            this.hello()
+        },
+        methods: {
+            hello() {
+                console.log('hello from mixin!')
+            }
+        }
+    }
+
+    // 定义一个使用此 mixin 对象的应用
+    const app = Vue.createApp({
+        mixins: [myMixin]
+    })
+2. 选项合并
+	当组件和 mixin 对象含有同名选项时，这些选项将以恰当的方式进行“合并”。在"data"的 property 发生冲突时，会以"组件自身"的数据为优先。
+    const myMixin = {
+      data() {
+        return {
+          message: 'hello',
+          foo: 'abc'
+        }
+      }
+    }
+
+    const app = Vue.createApp({
+      mixins: [myMixin],
+      data() {
+        return {
+          message: 'goodbye',
+          bar: 'def'
+        }
+      },
+      created() {
+        console.log(this.$data) // => { message: "goodbye", foo: "abc", bar: "def" }
+      }
+    })
+    同名的钩子函数将合并为一个数组(都执行),"mixin执行在组件之前".
+    值为对象的选项 methods、components 和 directives 将被合并为同一个对象。两个对象键名冲突时，"取组件对象"的键值对。
+3. 全局 mixin
+	Mixin 也可以进行全局注册。使用时格外小心！一旦使用全局 mixin，它将影响每一个之后创建的组件 (例如，每个子组件)。
+    可以通过传入自定义property , 在通过 $options 接收判断是否调用函数体.
+```
+
+## III. 自定义指令
+
+```js
+1. 注册指令(全局或局部)
+   全局 => 
+	const app = Vue.createApp({})
+    // 注册一个全局自定义指令 `v-focus`
+    app.directive('focus', {
+      // 当被绑定的元素挂载到 DOM 中时……
+      mounted(el) {
+        // 聚焦元素
+        el.focus()
+      }
+    })
+   局部 =>
+   	directives: {
+      focus: {
+        // 指令的定义
+        mounted(el) {
+          el.focus()
+        }
+      }
+    }
+2. 钩子函数
+	beforeCreate created beforeMount Mounted beforeUpdate updated beforeUnmount unmounted
+3. 动态指令参数    
+	v-mydirective:[argument]="value" => 
+    	app.directive('pin', {
+          mounted(el, binding) {
+            el.style.position = 'fixed'
+            // binding.arg 是我们传递给指令的参数
+            const s = binding.arg || 'top'
+            el.style[s] = binding.value + 'px'
+          }
+        })
+4. 函数简写
+	在 mounted 和 updated 时触发相同行为，而不关心其他的钩子函数。
+    app.directive('pin', (el, binding) => {
+      el.style.position = 'fixed'
+      const s = binding.arg || 'top'
+      el.style[s] = binding.value + 'px'
+    })
+5. 对象自变量
+	如果指令需要多个值，可以传入一个 JavaScript 对象字面量。
+    <div v-demo="{ color: 'white', text: 'hello!' }"></div>
+	app.directive('demo', (el, binding) => {
+      console.log(binding.value.color) // => "white"
+      console.log(binding.value.text) // => "hello!"
+    })
+6. 在组件中使用
+	当在组件中使用时，自定义指令总是会被应用在组件的"根节点上"。
+    <my-component v-demo="test"></my-component>
+	app.component('my-component', {
+      template: `
+        <div> // v-demo 指令将会被应用在这里
+          <span>My component content</span>
+        </div>
+      `
+    })
+	和 attribute 不同，指令不会通过 v-bind="$attrs" 被传入另一个元素。
+```
+
+
 
