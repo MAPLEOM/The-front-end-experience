@@ -95,3 +95,146 @@
 
 ```
 
+# 3. 防抖和节流
+
+```js
+1. 防抖
+	function dobounce(fn, wait, immediate) {
+	let timer = null;
+        return function () {
+            const context = this;
+            const argu = arguments;
+            timer && clearTimeout(timer);
+            if (immediate) {
+                !timer && fn.apply(context, argu);
+                timer = setTimeout(() => {
+                    timer = null;
+                }, wait);
+            } else {
+                timer = setTimeout(() => {
+                    fn.apply(context, argu);
+                }, wait);
+            }
+        };
+    }
+2. 节流
+	/**
+     * @param {*} fn   处理函数
+     * @param {*} wait 等待时间
+     * @param {*} type 1表示时间戳 2表示定时器版本
+     */
+    function throttle(fn, wait, type = 2) {
+        if (type === 1) {
+            var prev = 0;
+        } else {
+            var timer = null;
+        }
+        return function () {
+            const context = this;
+            const argu = arguments;
+            if (type === 1) {
+                // 时间戳
+                const now = new Date();
+                if (now - prev > wait) {
+                    fn.apply(context, argu);
+                    prev = now;
+                }
+            } else if (!timer) {
+                fn.apply(context, argu);
+                timer = setTimeout(() => {
+                    timer = null;
+                }, wait);
+            }
+        };
+    }
+```
+
+# 4. Promise(https://juejin.cn/post/6844903607574200334#comment)
+
+```js
+1. 基础使用
+	let promise = new Promise((resolve,reject)=>{
+      resolve('success'); //这里如果是reject('fail')
+    });
+    promise.then((res)=>{
+      console.log(res); // resolve('success'); => 输出：success
+    },(err)=>{
+      console.log(err); // 上面如果执行reject('fail') 这里就输出:fail
+    });
+2. 手写 Promise
+	/**
+     * @description 手写promise
+     * 缺少链式结构以及穿透值
+     */
+    class Promise {
+        constructor(executor) {
+            this.status = 'pending';
+            this.value = undefined;
+            this.reson = undefined;
+            this.successStore = []; //定义一个存放成功函数的数组 => 用于处理 setTimeout
+            this.failStore = []; //定义一个存放失败函数的数组 => 用于处理 setTimeout
+            let resolve = (value) => {
+                if (this.status === 'pending') {
+                    this.value = value;
+                    this.status = 'resolved';
+                    this.successStore.forEach((func) => func());
+                }
+            };
+            let reject = (reson) => {
+                if (this.status === 'pending') {
+                    this.reson = reson;
+                    this.status = 'rejected';
+                    this.failStore.forEach((func) => func());
+                }
+            };
+            try {
+                executor(resolve, reject); // 立即执行(新建Promise的对象 立即执行 then中的为微任务)
+            } catch (e) {
+                reject(e); //如果发生错误，将错误放入reject中
+            }
+        }
+        then(onFulfilled, onRejected) {
+            if (this.status === 'pending') {
+                this.successStore.push(() => {
+                    //当状态为pending时将成功的函数存放到数组里
+                    onFulfilled(this.value);
+                });
+                this.failStore.push(() => {
+                    //当状态为pending时将失败的函数存放到数组中
+                    onRejected(this.reason);
+                });
+            } else if (this.status === 'resolved') {
+                //如果状态是resolved
+                onFulfilled(this.value); //执行成功的resolve，并将成功后的值传递过去
+            } else if (this.status === 'rejected') {
+                //如果状态是rejected
+                onRejected(this.reason); //执行失败的reject,并将失败原因传递过去
+            }
+        }
+    }
+
+    module.exports = Promise; //将Promise导出
+
+```
+
+# 5. 去重(https://segmentfault.com/a/1190000016418021)
+
+```js
+1. 利用ES6 Set去重
+	function union (arr) { return Array.from(new Set(arr))};
+2. 利用双重for循环
+	function unique(arr){            
+            for(var i=0; i<arr.length; i++){
+                for(var j=i+1; j<arr.length; j++){
+                    if(arr[i]==arr[j]){         //第一个等同于第二个，splice方法删除第二个
+                        arr.splice(j,1);
+                        j--;
+                    }
+                }
+            }
+    	return arr;
+    }
+3. indexOf 去重
+4. includes 去重
+```
+
