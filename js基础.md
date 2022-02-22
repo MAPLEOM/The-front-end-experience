@@ -238,3 +238,196 @@
 4. includes 去重
 ```
 
+# 6. new的实现原理
+
+```js
+/**
+ * @description 封装new关键字
+ */
+function _new() {
+	const target = {};
+	const [constructor, ...args] = [...arguments];
+	target.__proto__ = constructor.prototype;
+	let result = constructor.apply(target, args);
+	if (result && (typeof result == 'object' || typeof result == 'function')) {
+		return result;
+	}
+	return target;
+}
+```
+
+# 7. var && const && let 区别
+
+| 声明方式 | 变量提升 | 暂时性死区 | 重复声明 | 块作用域有效 | 初始值 | 重新赋值 |
+| :------: | :------: | :--------: | :------: | :----------: | :----: | :------: |
+|   var    |    会    |   不存在   |   允许   |     不是     | 非必须 |   允许   |
+|   let    |   不会   |    存在    |  不允许  |      是      | 非必须 |   允许   |
+|  const   |   不会   |    存在    |  不允许  |      是      |  必须  |  不允许  |
+
+# 8. 隐藏页面元素的方法(https://juejin.cn/post/6844903874705227789)
+
+```js
+隐藏类型:
+	1.完全隐藏：元素从渲染树中消失，不占据空间。
+    	=> display:none 属性
+    	=> HTML5 新增属性 hidden(等同于 display:none) 
+	2.视觉上的隐藏：屏幕中不可见，占据空间。
+    	=> 利用 position 移除可视区域
+    	=> 利用 transform scale(0) 缩放 || translateX(-99999px) || rotateY(90deg)
+	3.语义上的隐藏：读屏软件不可读，但正常占据空。
+```
+
+# 9. TypeScript 中 type 和 interface 的区别?
+
+```tsx
+相同点：
+    1. 都可以描述 '对象' 或者 '函数' 
+    2. 都允许拓展(extends)
+不同点：
+    1. type 可以声明基本类型，联合类型，元组
+    2. type 可以使用 typeof 获取实例的类型进行赋值
+    3. 多个相同的 interface 声明可以自动合并
+使用 interface 描述‘数据结构’，使用 type 描述‘类型关系’
+```
+
+# 10. Typescript - 泛型
+
+```tsx
+泛型函数定义: => function identity<T> (arg:T): T { return arg }   // 说明参数和返回值类型相同
+泛型函数使用: => 
+		1. let output = identity<string>("myString");	// 填入所有参数 包括类型参数
+         2. let output = identity("myString");           // 类型推断 --  即编译器会根据传入的参数自动地帮助我们确定T的类型
+```
+
+# 11. js基础数据类型(7 种)
+
+```js
+number => typeof instance === "number"
+boolean => typeof instance === "boolean"
+string => typeof instance === "string
+undefined => typeof instance === "undefined"
+null => typeof instance === "object"
+bigint => typeof instance === "bigint"
+symbol => typeof instance === "symbol"
+```
+
+# 12. js类型检查
+
+```js
+typeof 操作符的唯一目的就是检查数据类型 => 
+	1. 基本数据类型检查使用 typeof => (tip: typeof 可以检测函数 'function')
+	2. 判断是否继承于某个构造函数可以使用 instanceof 关键字 (instanceof 运算符用于检测构造函数的 prototype 属性是否出现在某个实例对象的原型链上。)
+	3. Object.prototype.toString.call() => 比较完美的类型检查了
+```
+
+# 13.this指向
+
+```js
+=> this 永远指向最后调用它的那个对象
+    var name = "windowsName";
+    function fn() {
+        var name = 'Cherry';
+        innerFunction();
+        function innerFunction() {
+            console.log(this.name);      // windowsName
+        }
+    }
+    fn()
+```
+
+# 14. 改变this指向
+
+```js
+1. 箭头函数 (箭头函数的 this 始终指向函数定义时的 this，而非执行时。)
+    var name = "windowsName";
+    var a = {
+        name : "Cherry",
+        func1: function () {
+            console.log(this.name)     
+        },
+        func2: function () {
+            setTimeout(	() => {  // this 指向 a(定义时)
+                this.func1()
+            },100);
+        }
+
+    };
+    a.func2()     // Cherry
+
+2. 在函数内部使用 _this = this
+3. 使用 apply、call、bind
+	setTimeout(  function () { this.func1() }.bind(a)(),100);
+4. apply call 和 bind 的区别
+	call 方法接受的是若干个参数列表       =>  b.call(a,1,2) 
+    apply 接收的是一个包含多个参数的数组。 =>  b.apply(a,[1,2]) 
+	bind 接受的是若干个参数列表 是创建一个新的函数，我们必须要手动去调用 =>  b.bind(a,1,2)() 
+```
+
+# 15. 深浅拷贝(https://juejin.cn/post/6844904197595332622)
+
+## 1. 浅拷贝
+
+```js
+1. Object.assign()  => 对象
+	let obj1 = { person: {name: "kobe", age: 41},sports:'basketball' };
+    let obj2 = Object.assign({}, obj1);
+    obj2.person.name = "wade";
+    obj2.sports = 'football'
+    console.log(obj1); // { person: { name: 'wade', age: 41 }, sports: 'basketball' }
+2. 函数库lodash的_.clone方法
+	var _ = require('lodash');
+    var obj1 = {
+        a: 1,
+        b: { f: { g: 1 } },
+        c: [1, 2, 3]
+    };
+    var obj2 = _.clone(obj1);
+    console.log(obj1.b.f === obj2.b.f); // true
+3. 展开运算符...
+	let obj1 = { name: 'Kobe', address:{x:100,y:100}}
+    let obj2= {... obj1}
+    obj1.address.x = 200;
+    obj1.name = 'wade'
+    console.log('obj2',obj2) // obj2 { name: 'Kobe', address: { x: 200, y: 100 } }
+4. Array.prototype.concat()
+	let arr = [1, 3, {
+    	username: 'kobe'
+    }];
+    let arr2 = arr.concat();    
+    arr2[2].username = 'wade';
+    console.log(arr); //[ 1, 3, { username: 'wade' } ]
+5. Array.prototype.slice()
+    let arr = [1, 3, {
+        username: ' kobe'
+        }];
+    let arr3 = arr.slice();
+    arr3[2].username = 'wade'
+    console.log(arr); // [ 1, 3, { username: 'wade' } ]
+
+```
+
+## 2. 深拷贝
+
+```js
+1. JSON.parse(JSON.stringify())  // 这种方法虽然可以实现数组或对象深拷贝,但不能处理函数和正则
+2. 函数库lodash的_.cloneDeep方法  //  var obj2 = _.cloneDeep(obj1);
+3. 手写递归方法
+```
+
+# 16. 浏览器缓存(https://juejin.cn/post/6844903764566999054)
+
+# 17. js 继承
+
+# 18.HTTP 与 HTTPS
+
+```js
+1. HTTP + SSL(TLS) = HTTPS。 => 传输层安全性(TLS)或安全套接字层(SSL)对通信协议进行加密
+2. HTTP 默认端口号为 80 || Https默认端口号为 443
+```
+
+# 19. 设计模式
+
+```js
+
+```
+
