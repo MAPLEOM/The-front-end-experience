@@ -475,7 +475,54 @@ typeof 操作符的唯一目的就是检查数据类型 =>
 	3>. 加快了客户端加载网页的速度.    
 ```
 
-# 17. js 继承
+# 17. js 继承(https://juejin.cn/post/6844903696111763470)
+
+```js
+1. 原型链继承
+	function SuperType() {
+        this.property = true;
+    }
+
+    SuperType.prototype.getSuperValue = function() {
+        return this.property;
+    }
+
+    function SubType() {
+        this.subproperty = false;
+    }
+
+    // 这里是关键，创建SuperType的实例，并将该实例赋值给SubType.prototype
+    SubType.prototype = new SuperType(); 
+
+    SubType.prototype.getSubValue = function() {
+        return this.subproperty;
+    }
+
+    var instance = new SubType();
+    console.log(instance.getSuperValue()); // true
+
+	🎈 => 原型链方案存在的缺点：多个实例对引用类型的操作会被篡改。
+2. 借用构造函数继承 (使用父类的构造函数来增强子类实例, 等同于复制父类的实例给子类)
+	function  SuperType(){
+        this.color=["red","green","blue"];
+    }
+    function  SubType(){
+        //继承自SuperType
+        SuperType.call(this);
+    }
+    var instance1 = new SubType();
+    instance1.color.push("black");
+    alert(instance1.color);//"red,green,blue,black"
+
+    var instance2 = new SubType();
+    alert(instance2.color);//"red,green,blue"
+	
+	🎈 => 缺点:
+            1. 只能继承父类的实例属性和方法, 不能继承原型属性和方法.
+            2. 无法实现复用, 每个子类都有父类实例函数的副本, 影响性能.
+```
+
+
 
 # 18.HTTP 与 HTTPS
 

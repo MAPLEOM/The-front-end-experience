@@ -14,7 +14,7 @@
 😜 => 实现合成事件的目的如下:
 		1. 抹平了浏览器之间的兼容问题 另外这是一个跨浏览器的原生事件包装器 赋予了跨浏览器的能力.
 		2. 对于浏览器的原生事件 浏览器会给监听器创建一个事件对象 如果有很多事件监听 那么就会分配很多"事件对象" "造成高额的内存分配问题".
-		   但是对于合成事件来说 有一个事件池专门管理创建和销毁 事件使用时 就会从"池子"中复用 事件回调结束后 就会"销毁对象上的属性" 便于下次复用事件对象       
+		   但是对于合成事件来说 有一个事件池专门管理创建和销毁 事件使用时 就会从"池子"中复用 事件回调结束后 就会"销毁对象上的属性" 便于下次复用事件对象 
 ```
 
 ## 2. React 阻止事件冒泡三种情况
@@ -442,5 +442,16 @@ import React, { Component, Fragment } from 'react'
     1. props 是传递给组件的（类似于函数的形参），而state 是在组件内被组件自己管理的（类似于在一个函数内声明的变量）。
     2. props 是不可修改的，所有 React 组件都必须像纯函数一样保护它们的 props 不被更改。
     3. state 是在组件中创建的，一般在 constructor中初始化 state。state 是多变的、可以修改，每次setState都异步更新的。
+```
+
+## 21. React.Component 和 React.PureComponent 的区别
+
+```react
+🎈 => PureComponent 是一个纯组件, 用来"优化"React程序, 减少 render函数的执行次数, 从而提高组件性能.
+🚗 => 在React中, 当 prop 和 state变化时, 可以通过在 "shouldComponentUpdate"声明周期函数中执行 return false 来阻止页面更新,
+      从而减少不必要的 render 执行. React.pureComponent 会自动执行 shouldComponentUpdate.
+🌰 =>
+      使用pureComponent的好处：当组件更新时，如果组件的props或者state都没有改变，render函数就不会触发。
+	  省去虚拟DOM的生成和对比过程，达到提升性能的目的。这是因为react自动做了一层"浅比较"。
 ```
 
