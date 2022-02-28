@@ -4,3 +4,4 @@ jszip 用于前端打包压缩文件夹(图片暂不能压缩)
 vue-meta 管理页面的meta标签 便于微信等分享
 fullpage.js JQUERY 全局滚动插件 (https://alvarotrigo.com/fullPage/zh/)
 wow.js 依赖 animate.css 插件 (通过定义class等实现Animate.css的效果)
+react-intl React-语言国际化插件.

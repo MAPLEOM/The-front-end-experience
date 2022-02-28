@@ -1,5 +1,7 @@
 # React
 
+## 参考链接: https://juejin.cn/post/6941546135827775525
+
 ## 1. React 事件机制
 
 ```react
@@ -260,12 +262,185 @@ import React, { Component, Fragment } from 'react'
 
 ## 12. React 生命周期函数(https://projects.wojtekmaj.pl/react-lifecycle-methods-diagram/)
 
-## 13. 对 React 的插槽(Portals) 的理解, 如何使用, 有哪些使用场景.
+```react
+🎈 React 通常将组件生命周期分为三个阶段:
+    1. 装载阶段(Mount), 组件第一次在 DOM 树中被渲染的过程;
+    	挂载阶段组件被创建, 然后组件实例插入到DOM中,完成一次组件渲染,该过程"只发生一次",依次调用一下方法:
+            constructor
+                🚗 => 初始化组件的 state
+                🚗 => 给事件处理函数绑定 this
+                🌰 =>
+                constructor(props) {
+                    super(props);
+                    // 不要在构造函数中调用 setState，可以直接给 state 设置初始值
+                    this.state = { counter: 0 }
+                    this.handleClick = this.handleClick.bind(this)
+                }			   
+            getDrivedStateFromProps
+                这是一个"静态方法", 所以不能在这个函数中使用 this, 有两个参数 props 和 state,分别指接收到的新参数和当前组件state对象.
+                这个函数会"返回一个对象"用来更新当前的 "state 对象"，如果不需要更新可以返回 null 。
+            render
+                这个函数只做一件事,就是返回需要渲染的内容,所以不要在这个函数做其他业务逻辑.
+                其返回类型为:
+                    1.React元素
+                    2.数组和Fragment(片段): 返回多个元素
+                    3.Portals(插槽): 可以将子元素渲染到不同的 DOM 子树中.
+                    4.字符串和数字: 被渲染到Dom文本中
+                    5.布尔值或null: 不渲染任何内容
+            componentDidMount
+            	会在组件挂载后(插入DOM树中)立即调用 => 通常进行以下操作:(尽量不要再此处 调用 setState)
+                    1.执行依赖于DOM的操作
+                    2.发送网络请求(官方建议)
+    			   3.添加订阅消息(会在componentWillUnmount取消订阅)
+    2. 更新过程(Update),组件状态发生变化,重新更新渲染的过程;
+    3. 卸载过程(Unmount),组件从DOM树被移除的过程.
+```
+
+
+
+## 13. !! 对 React 的插槽(Portals) 的理解, 如何使用, 有哪些使用场景.
 
 ```react
 🎁 => 定义: Portal 提供了一种将子节点渲染到存在于父组件以外的 DOM 节点的优秀的方案.
 🎫 => 使用: ReactDOM.createPortal(child, container);
         1. 第一个参数 child 是可渲染的 React 子项，比如元素，字符串或者片段等;
         2. 第二个参数 container 是一个 DOM 元素。
+```
+
+## 14. 在 React 中如何避免不必要的 render ?
+
+```react
+💎 => React 基于"虚拟 Dom" 和 高效的 "diff算法"的完美配合, 实现了对 DOM 最小粒度的更新.
+	  大多数情况下, React对 Dom 的渲染效率足以满足日常业务. 但在个别复杂的业务场景下,
+      性能问题依然会困扰我们. 此时需要采取一些措施来提升性能,其很重要的方向就是避免不必要的 "Render"
+🎈 => 优化方案:
+		1. shouldComponentUpdate 和 PureComponent
+                => 可以利用这两者来 减少因为父组件更新而触发的子组件 "render",从而达到目的.
+                => shouldComponentUpdate 通过条件判断并 return false 的方式阻挡非必要更新.
+                => PureComponent 以浅层对比 prop 和 state的方式来实现 shouldComponentUpdate, 
+                   如果 React 赋予相同的 props 和 state," Render会渲染相同的内容 ",在某些情况下可能会提高性能.
+		2. 利用 "高阶组件"
+        		在函数组件中 并没有 shouldComponentUpdate这个生命周期 , 可以利用高阶组件, 封装一个类似 PureComponent 的功能.
+		3. 使用 React.memo
+				React.memo 是 React 16.6 新的一个 API, 用来"缓存组件"的渲染, 避免不必要的更新, 其实是一个高阶组件, 
+           		 与 PureComponent 十分相似, 但不同的是， React.memo只能用于"函数组件".
+                 🎪 => 组件在相同 props下,渲染相同的结果(React跳出渲染操作,直接复用上一次渲染结果).
+                 👓 => React.memo 仅检查 props 变更(Props 不变的情况下, 无须重新渲染, 直接复用上一次的渲染结果).
+                 !!! 如果想控制对比过程, 可以通过 "第二个参数"定义比较函数来实现.
+```
+
+## 15. 类组件和函数组件有什么不同?
+
+```react
+1. 相同点:
+	组件是 React 可复用的最小代码片段, 他们会返回页面中渲染的 React 元素. 所以无论是函数组件还是类组件在 "使用方式"和"最终呈现效果"完全一致.
+2. 不同点:
+	1. 开发思想的不同 => 
+    		类组件是基于面向对象编程的, 主打继承 生命周期函数等核心概念.
+			函数组件内核是函数式编程
+	2. 性能方面 => 
+    		类组件主要依靠 shouldComponentUpdate 阻断渲染来提升性能.
+             函数组件依靠 React.memo 缓存渲染结果来提高性能.
+	3. => 类组件在未来时间切片和并发模式中 由于声明周期带来的复杂度 并不易优化.
+	   => 函数组件本身轻量 且在 Hooks 的基础上提供了比原先更细粒度的逻辑组织与复用，更能适应 React 的未来发展。
+	4. 从上手程度而言，类组件更容易上手，从未来趋势上看，由于React Hooks 的推出，函数组件成了社区未来主推的方案。		       
+```
+
+## 16. React中什么是受控组件和非受控组件
+
+```react
+1. 受控组件
+	使用的表单元素, 都是通过 state 和 onChange的方式由 React 控制.  =>  当表单过多时,需要定义很多的 "变量"和"事件处理函数",代码将会很臃肿.
+2. 非受控组件
+	如果一个表单组件没有 value props时 就可以称为非受控组件.
+```
+
+## 17. React 组件通信
+
+```react
+1. 父子组件通信
+	🎈父组件向子组件通信: 父组件通过 props 向子组件传递需要的信息.
+        // 子组件: Child (props接收)
+        const Child = props =>{
+          return <p>{props.name}</p>
+        }
+        // 父组件 Parent (绑定属性)
+        const Parent = ()=>{
+            return <Child name="react"></Child>
+        }
+	🎈子组件向父组件通信: props + 回调的方式
+        // 子组件: Child
+        const Child = props =>{
+          const cb = msg =>{
+              return ()=>{
+                  props.callback(msg)
+              }
+          }
+          return (
+              <button onClick={cb("你好!")}>你好</button>
+          )
+        }
+        // 父组件 Parent
+        class Parent extends Component {
+            callback(msg){
+                console.log(msg)
+            }
+            render(){
+                return <Child callback={this.callback.bind(this)}></Child>    
+            }
+        }
+2.  跨级组件的通信方式
+	🎈父组件向孙子组件通信
+		1. 使用 props, 利用中间组件层层传递.(增加了复杂度且中间层组件添加了自己不需要的东西 => 不建议)
+		2. 使用 context, context相当于一个大容器, 可以把通信的内容放在大容器里面, 不管嵌套多深都可以随便取用, 对于跨多层的全局数据可以使用 context.
+            => 类组件 const con = createContext() => <con.Provider value={}></con.Provider> => <con.Consumer></con.Consumer>
+            => 函数组件 const con = createContext() => const useContext = useContext(con) => useContext value就是绑定的数据.
+3. 非嵌套关系组件通信.
+    1. 使用自定义事件通信. (发布订阅模式)
+    2. 通过 Redux 全局状态管理.
+    3. 兄弟组件 找到公共父节点 结合父子通信方式进行通信.  
+4. 如何解决 props 嵌套过深的问题
+    1. 使用 Context
+    2. 使用 Redux 状态库    
+5. 组件通信方式有哪些?
+    1. 父组件向子组件 => 父组件传递 props
+    2. 子组件向父组件 => 父组件传递 props + 回调函数的形式, 由子组件调用并传递信息到父组件作用域中.
+    3. 兄弟组件通信 => 找到共同的父节点
+    4. 跨层级通信 => Context
+    5. 发布订阅模式 => 引⼊event模块进⾏通信
+    6. 全局状态管理⼯具 => redux | mobx
+```
+
+## 18. React中props为什么是只读的?
+
+```react
+🎈 => 
+    this.props是组件之间沟通的一个接口, 原则上讲, 它只能从父组件流向子组件.
+    React具有浓重的"函数式编程思想":
+        1. 给定相同的输入,总会返回相同的输出.
+        2. 过程没有副作用
+        3. 不依赖外部状态
+	!!! 所以 保证this.props就保证了输入是相同的	        
+```
+
+## 19.  React中怎么检验props？验证props的目的是什么？
+
+```react
+🎈 React提供了 "PropTypes" 以提供验证使用. 当我们向 Props 传入的数据无效就会在控制台发出警告. => 它可以避免随着应用越来越复杂从而出现的问题.
+   !!! 当然如果项目中使用了 Typescript 则可以不用 PropTypes来校验, 而是使用 TS 中的 Interface验证.
+```
+
+## 20. React组件的props和state有什么区别?
+
+```react
+(1) props
+	props是一个从外部传进组件的参数, 主要作为就是从父组件向子组件传递数据，它具有可读性和不变性
+(2) state
+    state的主要作用是用于组件保存、控制以及修改自己的状态，它只能在constructor中初始化，它算是组件的私有属性，
+    不可通过外部访问和修改，只能通过组件内部的this.setState来修改，修改state属性会导致组件的重新渲染。
+(3) 区别
+    1. props 是传递给组件的（类似于函数的形参），而state 是在组件内被组件自己管理的（类似于在一个函数内声明的变量）。
+    2. props 是不可修改的，所有 React 组件都必须像纯函数一样保护它们的 props 不被更改。
+    3. state 是在组件中创建的，一般在 constructor中初始化 state。state 是多变的、可以修改，每次setState都异步更新的。
 ```
 
