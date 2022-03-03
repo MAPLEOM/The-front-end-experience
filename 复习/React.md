@@ -455,3 +455,48 @@ import React, { Component, Fragment } from 'react'
 	  省去虚拟DOM的生成和对比过程，达到提升性能的目的。这是因为react自动做了一层"浅比较"。
 ```
 
+## 22. React-Router路由
+
+```react
+1. React-Router的实现原理是什么?
+    客户端路由的实现思想:
+        🎈 => 基于 hash 的路由: 通过监听 "hashchange" 事件, 感知 hash 的变化. 改变 hash 可以通过 "location.hash = xx".
+        🎈 => 基于 H5 history 路由: 
+				1. 改变 url 可以通过 "history.pushState 和 replaceState"等, 会将 url 压入堆栈, 同时能够应用 history.go等 "API"
+				2. 监听 url 的变化可以通过 自定义事件 触发实现.
+	react-router 实现的原理:
+		1. 基于 history 库来实现上述不同的客户端路由实现思想, 并且保存历史记录等, "磨平浏览器的差异", 上层无感知.
+		2. 通过维护的列表, 在每次 URL 发生变化的回收, 通过配置的 "路由路径", 匹配对应的 Component, 并且 render.       
+        
+2. 如何配置 React-router 实现路由切换        
+	(1) 使用 <Route> 组件
+		路由匹配是通过比较 "<Route>" 的 "path"属性和"当前地址的 pathname" 来实现的. 当一个 <Route> 匹配成功时
+		它将渲染内容, 不匹配则渲染 null. 没有路径的 Route 将不会匹配. (新版本 component属性 改为 element)
+
+        <Route path='/about' component={About}/> // renders <About/>
+        <Route path='/contact' component={Contact}/> // renders null
+        <Route component={Always}/> // renders <Always/>
+
+     (2) 结合使用 <Switch> 和 <Route>组件
+		<Switch> 用于将 <Route> 分组.
+    	🌰 => 
+            <Switch>
+                <Route exact path="/" component={Home} />
+                <Route path="/about" component={About} />
+                <Route path="/contact" component={Contact} />
+            </Switch>
+		Switch 会遍历 Route元素, 并且仅渲染匹配到的"第一个" Route
+     (3) 使用 <link /> <navlink/> <Redirect> 组件
+    	 <link> => 创建一个链接, 即 <a>
+          🌰 =>  <Link to="/">Home</Link>  
+         <navlink> => 一种特殊类型 当他的 "to" 属性与当前地址匹配时, 可以将其定义为活跃的.
+          🌰 =>
+             <NavLink to="/react" activeClassName="hurray">
+                React
+            </NavLink>
+         <Redirect> => 重定向
+
+3. React-router 怎么设置重定向?             
+
+```
+
