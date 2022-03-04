@@ -2,6 +2,8 @@
 
 ## 参考链接: https://juejin.cn/post/6941546135827775525
 
+## 可参考: https://juejin.cn/post/7061588533214969892#heading-64
+
 ## 1. React 事件机制
 
 ```react
@@ -495,7 +497,7 @@ import React, { Component, Fragment } from 'react'
                 React
             </NavLink>
          <Redirect> => 重定向
-
+             
 3. React-router 怎么设置重定向?             
 
 ```
