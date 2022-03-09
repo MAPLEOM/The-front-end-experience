@@ -655,3 +655,5 @@ GET 产生一个TCP数据包；POST 产生两个TCP数据包。
 ```
 
 # 23. React学习(https://juejin.cn/post/6941546135827775525)
+
+# 24. 手写 Promise.all 和 Promise.race
