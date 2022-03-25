@@ -89,7 +89,46 @@
 ```js
 🎈 Context 提供了一个无需为每层组件手动添加 props, 就能在组件树之间进行"数据传递"的方法.
 1. 何时使用 Context
-	Context 的设计目的
+	Context 的设计目的就是为了"共享"对于一个组件而言是"全局"的数据. => 使用 Context 可以避免通过中间元素传递 "props"
+2. 使用 Context 之前的"考虑"
+	Context 的使用场景主要在于很多不同层级的组件需要访问同样的一些数据. "谨慎使用", 这会使组件的"复用性"变差.
+    🎈 如果仅仅只想避免避免层层传递一些属性, 可以使用 .😃"组合组件" 的方案, 有时候会更好.
+    🎈 另一种方案, 可以直接将"组件"传递下去. => 可以减少传递的 "props"的数量. !!!! 😂这将使得组件变得更复杂
+    🎈 相对于这些方案, Context要简单得多.
+3. API
+	React.createContext
+		🌰 const MyContext = React.createContext( defaultValue );
+		功能: 创建一个 Context 对象, 当 React 组件"订阅"了这个 Context 对象, 这个组件会从最近的那个匹配 "Provider"中读取当前的 Context 的值.
+	Context.Provider
+		🌰 <MyContext.Provider value={/* 某个值 */}>
+         功能: 每个 Context 对象都会返回一个 "Provider"组件, 它允许"消费组件"订阅 context 的变化.	Provider 会有一个 "value" 属性,
+        	  当 value值发生变化, 内部的所有的 "消费组件"都会重新渲染. (新旧值检测变化, 使用 "object.is")
+	Class.contextType 
+		🌰 class MyClass extends React.Component {} => MyClass.contextType = MyContext; 
+		功能: 挂载在 class 上的 contextType 属性会被重赋值为一个由"React.createContext"创建的 Context 对象. 
+              能让你使用 "this.context" 消费最近 Context 上的那个值.
+	Context.consumer
+		🌰 <MyContext.Consumer> {value => /* 基于 context 值进行渲染*/} </MyContext.Consumer>
+         功能: Consumer 能让 React组件"订阅"到 context 变更. 这个函数接收当前的 context 值, 返回一个 React节点.
+	Context.displayName
+		🌰 const MyContext = React.createContext(/* some value */); MyContext.displayName = 'MyDisplayName';
+		功能: context对象接受一个名为 "displayName" 的属性, 类型为字符串, !!! React DevTools "使用该字符串"来确定 context 要显示的内容。
+```
+
+### 2.4 错误边界
+
+```js
+🎈 错误边界 是一种组件, 这种组件 "可以捕获并打印发生在其子组件树任何位置的 js 错误, 并且它会渲染出备用的 UI".
+   如果 "class组件"中定义了 "static getDerivedStatedStateFromError"(用于渲染备用UI) 或 "componentDidCatch"(用于打印错误信息) 
+   这两个声明周期函数的任意一个,那么就变成了一个错误边界.
+🌰 <ErrorBoundary> <MyWidget /></ErrorBoundary>  
+	// !! 错误边界仅可以捕获其子组件的错误
+```
+
+### 2.5 Refs转发
+
+```js
+
 ```
 
 ## 3.  API
